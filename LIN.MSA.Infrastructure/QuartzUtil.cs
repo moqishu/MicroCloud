@@ -7,7 +7,7 @@ using Quartz.Impl;
 
 namespace LIN.MSA.Infrastructure
 {
-    public class QuartzUtil<T> where T : IJob
+    public class QuartzUtil
     {
         public static IScheduler scheduler = null;
 
@@ -33,7 +33,7 @@ namespace LIN.MSA.Infrastructure
         /// 添加任务计划
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> AddScheduleJob(ScheduleEntity model)
+        public async Task<bool> AddScheduleJob<T>(ScheduleEntity model) where T : IJob
         {
             try
             {
