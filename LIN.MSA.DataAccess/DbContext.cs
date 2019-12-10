@@ -35,16 +35,25 @@ namespace LIN.MSA.DataAccess
 
         private static SqlSugarClient GetDb(string key)
         {
+            // 防止创建过多队列
+            if (dbPool.Count > 1000)
+            {
+                dbPool.Clear();
+            }
+
+            SqlSugarClient db = null;
             if (dbPool.ContainsKey(key))
             {
-                return dbPool[key];
+                db = dbPool[key];
             }
-            else
+            if (db == null)
             {
-                var db = BuildSqlClient();
+                dbPool.Remove(key);
+                db = BuildSqlClient();
                 dbPool.Add(key, db);
-                return db;
             }
+
+            return db;
         }
 
         private static SqlSugarClient BuildSqlClient()
