@@ -12,4 +12,9 @@
     <PackageReference Include="Grpc.AspNetCore" Version="2.23.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LIN.MSA.DataAccess\LIN.MSA.DataAccess.csproj" />
+    <ProjectReference Include="..\LIN.MSA.Infrastructure\LIN.MSA.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

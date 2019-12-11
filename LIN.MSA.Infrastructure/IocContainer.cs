@@ -1,4 +1,6 @@
-﻿using AspectCore.Extensions.DependencyInjection;
+﻿using AspectCore.Configuration;
+using AspectCore.DynamicProxy;
+using AspectCore.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -10,6 +12,9 @@ using System.Web;
 
 namespace LIN.MSA.Infrastructure
 {
+    /// <summary>
+    /// IOC容器
+    /// </summary>
     public class IocContainer
     {
         private static IServiceCollection _myContainer;
@@ -22,6 +27,9 @@ namespace LIN.MSA.Infrastructure
         //请求开始-请求结束 在这次请求中获取的对象都是同一个
         //AddTransient的生命周期：
         //请求获取-（GC回收-主动释放） 每一次获取的对象都不是同一个
+        //config.Interceptors.AddTyped<CustomInterceptor>(Predicates.ForMethod("*Query")); //拦截所有Query后缀的方法
+        //config.Interceptors.AddTyped<CustomInterceptor>(Predicates.ForService("*Repository")); //拦截所有Repository后缀的类或接口
+        //config.Interceptors.AddTyped<CustomInterceptor>(Predicates.ForMethod("AspectCoreDemo.*")); //拦截所有AspectCoreDemo及其子命名空间下面的接口或类
 
         public static IServiceCollection MyContainer
         {
@@ -65,7 +73,10 @@ namespace LIN.MSA.Infrastructure
         {
             try
             {
-                return MyContainer.AddTransient<T>();
+                // 手动注册需要重新 BuildDynamicProxyProvider()否则获取不到对象
+                var result = MyContainer.AddTransient<T>();
+                _serviceProvider = MyContainer.BuildDynamicProxyProvider();
+                return result;
             }
             catch (Exception)
             {
@@ -76,14 +87,18 @@ namespace LIN.MSA.Infrastructure
         public static IServiceCollection AddTransient<TService, TImplementation>() where TService : class
             where TImplementation : class, TService
         {
-            return MyContainer.AddTransient<TService, TImplementation>();
+            var result = MyContainer.AddTransient<TService, TImplementation>();
+            _serviceProvider = MyContainer.BuildDynamicProxyProvider();
+            return result;
         }
 
         public static IServiceCollection AddSingleton<T>() where T : class
         {
             try
             {
-                return MyContainer.AddSingleton<T>();
+                var result = MyContainer.AddSingleton<T>();
+                _serviceProvider = MyContainer.BuildDynamicProxyProvider();
+                return result;
             }
             catch (Exception)
             {
@@ -94,14 +109,18 @@ namespace LIN.MSA.Infrastructure
         public static IServiceCollection AddSingleton<TService, TImplementation>() where TService : class
             where TImplementation : class, TService
         {
-            return MyContainer.AddSingleton<TService, TImplementation>();
+            var result = MyContainer.AddSingleton<TService, TImplementation>();
+            _serviceProvider = MyContainer.BuildDynamicProxyProvider();
+            return result;
         }
 
         public static IServiceCollection AddScoped<T>() where T : class
         {
             try
             {
-                return MyContainer.AddScoped<T>();
+                var result = MyContainer.AddScoped<T>();
+                _serviceProvider = MyContainer.BuildDynamicProxyProvider();
+                return result;
             }
             catch (Exception)
             {
@@ -112,7 +131,9 @@ namespace LIN.MSA.Infrastructure
         public static IServiceCollection AddScoped<TService, TImplementation>() where TService : class
             where TImplementation : class, TService
         {
-            return MyContainer.AddScoped<TService, TImplementation>();
+            var result = MyContainer.AddScoped<TService, TImplementation>();
+            _serviceProvider = MyContainer.BuildDynamicProxyProvider();
+            return result;
         }
 
         /// <summary>
@@ -120,66 +141,105 @@ namespace LIN.MSA.Infrastructure
         /// </summary>
         public static void AutoRegister()
         {
-            List<Assembly> assemblys = LoadAssembly();
+            var classNames = GetAssembly();
+            foreach (var item in classNames)
+            {
+                // 存在接口的注册方式
+                if (item.Value.Length > 0)
+                {
+                    foreach (var typeArry in item.Value)
+                    {
+                        // 1.实例注册
+                        MyContainer.AddScoped(item.Key, typeArry);
+                    }
+                }
+                else
+                {
+                    MyContainer.AddScoped(item.Key);
+                }
 
-            List<Type> classTypes = GetClassTypes(assemblys);
+                if (item.Key.BaseType != null && item.Key.BaseType.FullName == typeof(AbstractInterceptor).ToString())
+                {
+                    // 2.全局拦截
+                    MyContainer.ConfigureDynamicProxy(config =>
+                    {
+                        config.Interceptors.AddTyped(item.Key);
+                    });
+                }
+            }
 
-            //实现ISingleton接口的类型集合注册为单例模式
-            //List<Type> singletonTypeList = GetDerivedClass<ISingleton>(classTypes);
-            ////注册单例
-            //RegisterType<ContainerControlledLifetimeManager>(singletonTypeList);
-        }
-
-        public static List<Assembly> LoadAssembly()
-        {
-            List<string> assemblyFiles = GetAssemblyFiles();
-            return AppDomain.CurrentDomain.GetAssemblies().Where(assembly => assemblyFiles.Contains(assembly.ManifestModule.ScopeName)).ToList();
+            _serviceProvider = MyContainer.BuildDynamicProxyProvider();
         }
 
         /// <summary>
-        /// 获取指定目录及其子目录的所有DLL文件路径集合
+        /// 获取目录程序集
         /// </summary>
-        /// <param name="assemblyDirectory"></param>
         /// <returns></returns>
-        private static List<string> GetAssemblyFiles()
+        public static Dictionary<Type, Type[]> GetAssembly()
         {
-            string assemblyDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            //if (HttpContext.Current != null)
-            //{
-            //    assemblyDirectory = Path.Combine(assemblyDirectory, "Bin");
-            //}
-            assemblyDirectory = Path.Combine(assemblyDirectory, "Bin");
+            string directory = AppDomain.CurrentDomain.BaseDirectory;
+
+            //获取DLL文件
+            List<string> files = Directory.GetFiles(directory, "*.dll").Select(path => Path.GetFileName(path)).ToList();
+            files = files.Where(f => f.Contains("LIN.MSA.")).ToList();
+
+            List<Assembly> dllFiles = new List<Assembly>();
+            foreach (var file in files)
+            {
+                dllFiles.Add(Assembly.Load(file.Replace(".dll", "")));
+            }
+
+            List<Type> types = new List<Type>();
+
+            foreach (var item in dllFiles)
+            {
+                types.AddRange(item.GetTypes().Where(t => t.IsClass && !t.IsInterface && !t.IsAbstract));
+            }
+
+            Dictionary<Type, Type[]> result = new Dictionary<Type, Type[]>();
+            foreach (var key in types)
+            {
+                var interfaceType = key.GetInterfaces();
+                result.Add(key, interfaceType);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 获取目录程序集
+        /// </summary>
+        /// <returns></returns>
+        public static Dictionary<Type, Type[]> GetAssembly2()
+        {
+            string directory = AppDomain.CurrentDomain.BaseDirectory;
+            //directory = Path.Combine(directory, "Bin");
             string[] registerFiles = new string[]
             {
-                "KT.Parking.Repositories.dll",
+                "LIN.MSA.DataAccess.dll",
             };
             //获取DLL文件
-            List<string> assemblyFiles = Directory.GetFiles(assemblyDirectory, "*.dll").Select(path => Path.GetFileName(path)).ToList();
-            assemblyFiles = assemblyFiles.Where(f => registerFiles.Contains(f)).ToList();
-            return assemblyFiles;
-        }
+            List<string> files = Directory.GetFiles(directory, "*.dll").Select(path => Path.GetFileName(path)).ToList();
+            files = files.Where(f => registerFiles.Contains(f)).ToList();
 
-        /// <summary>
-        /// 从程序集加载所有类(不包含接口、抽象类)
-        /// </summary>
-        /// <param name="assemblys"></param>
-        /// <returns></returns>
-        private static List<Type> GetClassTypes(List<Assembly> assemblys)
-        {
+            // 程序运行时程序集
+            var dllFiles = AppDomain.CurrentDomain.GetAssemblies().Where(assembly => files.Contains(assembly.ManifestModule.ScopeName)).ToList();
+
             List<Type> types = new List<Type>();
-            assemblys.ForEach(assembly =>
-            {
-                try
-                {
-                    types.AddRange(assembly.GetTypes().Where(t => t.IsClass && !t.IsInterface && !t.IsAbstract));
-                }
-                catch (ReflectionTypeLoadException ex)
-                {
-                    //处理类型加载异常，一般为缺少引用的程序集导致
-                }
 
-            });
-            return types;
+            foreach (var item in dllFiles)
+            {
+                types.AddRange(item.GetTypes().Where(t => t.IsClass && !t.IsInterface && !t.IsAbstract));
+            }
+
+            Dictionary<Type, Type[]> result = new Dictionary<Type, Type[]>();
+            foreach (var key in types)
+            {
+                var interfaceType = key.GetInterfaces();
+                result.Add(key, interfaceType);
+            }
+
+            return result;
         }
 
         /// <summary>
