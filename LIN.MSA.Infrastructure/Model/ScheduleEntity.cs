@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LIN.MSA.Infrastructure
 {
@@ -13,7 +11,7 @@ namespace LIN.MSA.Infrastructure
         /// <summary>
         /// 结束执行时间
         /// </summary>
-        public DateTime EndRunTime { get; set; }
+        public DateTime? EndRunTime { get; set; }
         /// <summary>
         /// 作业名称
         /// </summary>
