@@ -22,5 +22,25 @@ namespace LIN.MSA.GrpcService
                 Message = "Hello " + request.Name
             });
         }
+
+        public override Task<RegisterReply> Register(RegisterRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(new RegisterReply
+            {
+                Message = "Hello " + request.Data
+            });
+        }
+
+        public override Task<FindReply> FindService(FindRequest request, ServerCallContext context)
+        {
+
+            var result = string.Empty;
+
+            return Task.FromResult(new FindReply
+            {
+                Message = result
+            });
+        }
+
     }
 }

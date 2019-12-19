@@ -8,6 +8,10 @@ package Greet;
 service Greeter {
   // Sends a greeting
   rpc SayHello (HelloRequest) returns (HelloReply);
+
+  rpc Register (RegisterRequest) returns (RegisterReply);
+
+  rpc FindService (FindRequest) returns (FindReply);
 }
 
 // The request message containing the user's name.
@@ -17,5 +21,21 @@ message HelloRequest {
 
 // The response message containing the greetings.
 message HelloReply {
+  string message = 1;
+}
+
+message RegisterRequest{
+	string data = 1;
+}
+
+message RegisterReply {
+  string message = 1;
+}
+
+message FindRequest{
+	string data = 1;
+}
+
+message FindReply {
   string message = 1;
 }
