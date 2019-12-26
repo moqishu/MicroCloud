@@ -1,3 +1,4 @@
+using LIN.MSA.Infrastructure;
 using NUnit.Framework;
 using System;
 
@@ -19,7 +20,11 @@ namespace LIN.MSA.NUnit
         [Test]
         public void hello()
         {
-
+            for(int i = 0; i < 1000; i++)
+            {
+                Console.WriteLine(Snowflake.GetId());
+            }
+            
         }
     }
 }
