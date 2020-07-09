@@ -15,6 +15,10 @@
     <Protobuf Include="..\LIN.MSA.GrpcService\Protos\*.proto" GrpcServices="Client" />
   
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LIN.MSA.Infrastructure\LIN.MSA.Infrastructure.csproj" />
+  </ItemGroup>
   
   
 
