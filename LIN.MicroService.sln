@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LIN.MSA.Infrastructure", "L
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LIN.MSA.DataAccess", "LIN.MSA.DataAccess\LIN.MSA.DataAccess.csproj", "{C402BC97-62F4-483E-9624-63F3B21941D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LIN.MSA.NUnit", "LIN.MSA.NUnit\LIN.MSA.NUnit.csproj", "{D63FF9D4-8D1A-4168-8940-5CB34B102198}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LIN.MSA.NUnit", "LIN.MSA.NUnit\LIN.MSA.NUnit.csproj", "{D63FF9D4-8D1A-4168-8940-5CB34B102198}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LIN.MSA.GrpcControl", "LIN.MSA.GrpcControl\LIN.MSA.GrpcControl.csproj", "{483ADD2F-CF37-49A0-87A0-341B655410A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{D63FF9D4-8D1A-4168-8940-5CB34B102198}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D63FF9D4-8D1A-4168-8940-5CB34B102198}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D63FF9D4-8D1A-4168-8940-5CB34B102198}.Release|Any CPU.Build.0 = Release|Any CPU
+		{483ADD2F-CF37-49A0-87A0-341B655410A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{483ADD2F-CF37-49A0-87A0-341B655410A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{483ADD2F-CF37-49A0-87A0-341B655410A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{483ADD2F-CF37-49A0-87A0-341B655410A5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

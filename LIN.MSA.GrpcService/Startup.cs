@@ -31,7 +31,7 @@ namespace LIN.MSA.GrpcService
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcService<GreeterService>();
+                endpoints.MapGrpcService<PlatService>();
 
                 endpoints.MapGet("/", async context =>
                 {

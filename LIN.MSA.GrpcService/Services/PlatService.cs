@@ -7,10 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace LIN.MSA.GrpcService
 {
-    public class GreeterService : Greeter.GreeterBase
+    public class PlatService : PlatCenter.PlatCenterBase
     {
-        private readonly ILogger<GreeterService> _logger;
-        public GreeterService(ILogger<GreeterService> logger)
+        private readonly ILogger<PlatService> _logger;
+        public PlatService(ILogger<PlatService> logger)
         {
             _logger = logger;
         }
