@@ -2,6 +2,9 @@
 
 namespace LIN.MSA.Infrastructure
 {
+    /// <summary>
+    /// 任务计划模型
+    /// </summary>
     public class ScheduleEntity
     {
         /// <summary>
